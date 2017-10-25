@@ -1,0 +1,1 @@
+libgenapi==1.2.0requests==2.18.1
