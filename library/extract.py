@@ -1,4 +1,5 @@
 import re
+import textract
 from html.parser import HTMLParser
 from epub_conversion.utils import open_book, convert_epub_to_lines
 
@@ -15,6 +16,12 @@ def get_text(path):
         lines = convert_epub_to_lines(book)
         text = '\n'.join(lines)
         return strip_tags(text)
+    elif path.endswith('.pdf'):
+        try:
+            text = textract.process(path)
+            return text.decode('utf8')
+        except textract.exceptions.ShellError:
+            return ''
     elif path.endswith('.txt'):
         return open(path, 'r').read()
     elif path.endswith('.html'):
@@ -27,11 +34,11 @@ class MLStripper(HTMLParser):
         self.reset()
         self.strict = False
         self.convert_charrefs = True
-        self.feed = []
+        self.fed = []
     def handle_data(self, d):
-        self.feed.append(d)
+        self.fed.append(d)
     def get_data(self):
-        return ''.join(self.feed)
+        return ''.join(self.fed)
 
 
 def strip_tags(html):
