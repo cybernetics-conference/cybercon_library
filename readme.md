@@ -1,20 +1,16 @@
-sketch for downloading and extracting text/questions for library books
+## Installation
 
-example usage:
-
-```python
-from library import libgen, extract
-
-# search for a book on libgen
-# only returns results with extensions of html, txt, or epub
-results = libgen.search('cybernetics')
-
-# download a result to libgen
-path = libgen.download(results[0])
-
-# get the text from the downloaded book
-text = extract.get_text(path)
-
-# get the questions from the text
-questions = extract.get_questions(text)
 ```
+sudo apt install libzbar0
+pip install -r requirements.txt
+```
+
+## Pipeline
+
+Run using `extract.py`:
+
+1. Search for corresponding books by ISBN/Title
+2. Gather metadata for books, if matching ones are found
+3. Download preferred extension (ideally epub, txt, or html)
+4. Extract text from the downloaded file
+5. Extract questions from extracted text
