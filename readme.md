@@ -14,3 +14,9 @@ Run using `extract.py`:
 3. Download preferred extension (ideally epub, txt, or html)
 4. Extract text from the downloaded file
 5. Extract questions from extracted text
+
+## Scanner
+
+```
+python scanner.py
+```
