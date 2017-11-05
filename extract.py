@@ -7,7 +7,7 @@ DATA_PATH = os.path.join(DATA_DIR, 'data.json')
 BOOK_PATH = os.path.join(DATA_DIR, 'books')
 
 # load catalogued books
-BOOKS = json.load(open('librarything_CyberneticsCon.json', 'r'))
+BOOKS = json.load(open('data/librarything_CyberneticsCon.json', 'r'))
 
 try:
     DATA = json.load(open(DATA_PATH, 'r'))
@@ -94,7 +94,8 @@ def extract_text():
             continue
         elif result.get('file') is None:
             continue
-        path = os.path.join(BOOK_PATH, result['file'])
+        # path = os.path.join(BOOK_PATH, result['file'])
+        path = result['file']
         text = extract.get_text(path)
         print('[EX] {}'.format(path))
         questions = extract.get_questions(text)

@@ -13,6 +13,8 @@ def get_questions(text):
 def get_text(path):
     if path.endswith('.epub'):
         book = open_book(path)
+        if book is None:
+            return ''
         lines = convert_epub_to_lines(book)
         text = '\n'.join(lines)
         return strip_tags(text)
