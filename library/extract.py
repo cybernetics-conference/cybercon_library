@@ -1,8 +1,10 @@
 import re
+import spacy
 import textract
 from html.parser import HTMLParser
 from epub_conversion.utils import open_book, convert_epub_to_lines
 
+nlp = spacy.load('en')
 QUESTION_RE = re.compile('([A-Z][^(.?!)]+\?)')
 
 
@@ -29,6 +31,11 @@ def get_text(path):
     elif path.endswith('.html'):
         html = open(path, 'r').read()
         return strip_tags(html)
+
+
+def tokenize(text):
+    doc = nlp(text)
+    return [token.lemma_ for token in doc if token.lemma_.strip()]
 
 
 class MLStripper(HTMLParser):

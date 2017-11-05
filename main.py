@@ -1,10 +1,13 @@
 import os
 import json
-from library import libgen, extract, util
+import qrcode
+from library import libgen, extract, util, topics
 
 DATA_DIR = 'data/'
 DATA_PATH = os.path.join(DATA_DIR, 'data.json')
 BOOK_PATH = os.path.join(DATA_DIR, 'books')
+QR_PATH = os.path.join(DATA_DIR, 'qrcodes')
+OUTPUT_PATH = os.path.join(DATA_DIR, 'books.json') # load this into cybersym
 
 # load catalogued books
 BOOKS = json.load(open('data/librarything_CyberneticsCon.json', 'r'))
@@ -19,16 +22,16 @@ except FileNotFoundError:
 
 
 def fetch_metadata():
-    for i, book in enumerate(BOOKS.values()):
+    for i, (id, book) in enumerate(BOOKS.items()):
         isbn = book.get('isbn')
         title = book['title']
         print('[{}]: {}'.format(i, title))
 
         # skip books we've already dealt with
-        if title in DATA['missing'] or title in DATA['results']:
+        if id in DATA['missing'] or id in DATA['results']:
             continue
         if isbn is None:
-            DATA['missing'].append(title)
+            DATA['missing'].append(id)
             continue
 
         try:
@@ -39,9 +42,9 @@ def fetch_metadata():
             results = []
 
         if not results:
-            DATA['missing'].append(title)
+            DATA['missing'].append(id)
         else:
-            DATA['results'][title] = {'results': results}
+            DATA['results'][id] = {'results': results}
 
         # periodically save results
         print('n_results:', len(DATA['results']))
@@ -53,7 +56,9 @@ def fetch_metadata():
 
 def download_books():
     filtered = {}
-    for book in BOOKS.values():
+    for id, book in BOOKS.items():
+        if id in DATA['missing']:
+            continue
         isbns = util.get_isbns(book)
         ok = []
         for results in DATA['results'].values():
@@ -62,9 +67,10 @@ def download_books():
                    or r['title'] == book['title']]
         if ok:
             ok = util.sort_by_preferred_ext(ok)
-            filtered[book['title']] = ok
-    for title, results in filtered.items():
-        if DATA['results'][title].get('file') is not None:
+            filtered[id] = ok
+    for id, results in filtered.items():
+        title = BOOKS[id]['title']
+        if DATA['results'][id].get('file') is not None:
             print('[OK] {}'.format(title))
             continue
         print('[DL] {}'.format(title))
@@ -80,7 +86,7 @@ def download_books():
         if not ok:
             print('[XX] No successful download for {}'.format(title))
             continue
-        DATA['results'][title]['file'] = outpath
+        DATA['results'][id]['file'] = os.path.basename(outpath)
         with open(DATA_PATH, 'w') as f:
             json.dump(DATA, f)
 
@@ -88,29 +94,56 @@ def download_books():
 
 
 def extract_text():
-    for title, result in DATA['results'].items():
+    for id, result in DATA['results'].items():
+        title = BOOKS[id]['title']
         if result.get('text') is not None:
             print('[OK] {}'.format(title))
             continue
         elif result.get('file') is None:
             continue
-        # path = os.path.join(BOOK_PATH, result['file'])
-        path = result['file']
+        path = os.path.join(BOOK_PATH, result['file'])
         text = extract.get_text(path)
-        print('[EX] {}'.format(path))
+        print('[EX] {}'.format(result['file']))
         questions = extract.get_questions(text)
         result['text'] = text
         result['questions'] = questions
+        result['tokens'] = extract.tokenize(text)
     with open(DATA_PATH, 'w') as f:
         json.dump(DATA, f)
 
 
+def compute_topic_mixtures():
+    for id, data in DATA['results'].items():
+        BOOKS[id]['tokens'] = data.get('tokens', [])
+    mixtures = topics.compute_topic_mixtures(BOOKS)
+    for id, mixture in mixtures.items():
+        print(mixture)
+        BOOKS[id]['topics'] = mixture
+
+
+def generate_qrcodes():
+    for id in BOOKS.keys():
+        img = qrcode.make(id, border=0)
+        fname = '{}.png'.format(id)
+        img.save(os.path.join(QR_PATH, fname))
+
+
 if __name__ == '__main__':
-    print('Fetching metadata...')
-    fetch_metadata()
+    # print('Fetching metadata...')
+    # fetch_metadata()
 
-    print('Downloading books...')
-    download_books()
+    # print('Downloading books...')
+    # download_books()
 
-    print('Extracting text...')
-    extract_text()
+    # print('Extracting text...')
+    # extract_text()
+
+    print('Computing topic mixtures...')
+    compute_topic_mixtures()
+
+    # print('Generating output file...')
+    # with open(OUTPUT_PATH, 'w') as f:
+    #     json.dump(BOOKS, f)
+
+    # print('Generating QR codes...')
+    # generate_qrcodes()
