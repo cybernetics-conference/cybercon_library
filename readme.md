@@ -14,3 +14,5 @@ Run using `main.py`:
 4. Extract text from the downloaded file
 5. Extract questions from extracted text
 6. Compute topic mixtures for the books
+
+This generates a file at `data/library.json`. Move this to `cybersym/data/library.json`.
