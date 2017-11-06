@@ -1,13 +1,14 @@
 import os
 import json
 import qrcode
+from collections import defaultdict
 from library import libgen, extract, util, topics
 
 DATA_DIR = 'data/'
 DATA_PATH = os.path.join(DATA_DIR, 'data.json')
 BOOK_PATH = os.path.join(DATA_DIR, 'books')
 QR_PATH = os.path.join(DATA_DIR, 'qrcodes')
-OUTPUT_PATH = os.path.join(DATA_DIR, 'books.json') # load this into cybersym
+OUTPUT_PATH = os.path.join(DATA_DIR, 'library.json') # load this into cybersym
 
 # load catalogued books
 BOOKS = json.load(open('data/librarything_CyberneticsCon.json', 'r'))
@@ -117,8 +118,17 @@ def compute_topic_mixtures():
         BOOKS[id]['tokens'] = data.get('tokens', [])
     mixtures = topics.compute_topic_mixtures(BOOKS)
     for id, mixture in mixtures.items():
-        print(mixture)
         BOOKS[id]['topics'] = mixture
+
+
+def process_questions():
+    questions_by_topic = defaultdict(list)
+    for id, data in DATA['results'].items():
+        questions = data.get('questions', [])
+        BOOKS[id]['questions'] = questions
+        for topic in BOOKS[id]['topics'].keys():
+            questions_by_topic[topic].extend(questions)
+    return questions_by_topic
 
 
 def generate_qrcodes():
@@ -129,21 +139,27 @@ def generate_qrcodes():
 
 
 if __name__ == '__main__':
-    # print('Fetching metadata...')
-    # fetch_metadata()
+    print('Fetching metadata...')
+    fetch_metadata()
 
-    # print('Downloading books...')
-    # download_books()
+    print('Downloading books...')
+    download_books()
 
-    # print('Extracting text...')
-    # extract_text()
+    print('Extracting text...')
+    extract_text()
 
     print('Computing topic mixtures...')
     compute_topic_mixtures()
 
-    # print('Generating output file...')
-    # with open(OUTPUT_PATH, 'w') as f:
-    #     json.dump(BOOKS, f)
+    print('Processing questions...')
+    questions = process_questions()
 
-    # print('Generating QR codes...')
-    # generate_qrcodes()
+    print('Generating output file...')
+    with open(OUTPUT_PATH, 'w') as f:
+        json.dump({
+            'books': BOOKS,
+            'questions': questions
+        }, f)
+
+    print('Generating QR codes...')
+    generate_qrcodes()
