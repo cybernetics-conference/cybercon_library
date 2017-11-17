@@ -30,7 +30,7 @@ def download(result, dir):
     # 'https://libgen.pw/download.php?id=626268'
     url = result['mirrors'][0].replace('view', 'download')
     outpath = os.path.join(
-        dir, '{}.{}'.format(result['title'], result['extension']))
+        dir, '{}.{}'.format(result['title'].replace('/', '_'), result['extension']))
 
     resp = requests.get(url)
     html = lxml.html.fromstring(resp.content)

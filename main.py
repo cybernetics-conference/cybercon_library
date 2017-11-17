@@ -7,7 +7,7 @@ from library import libgen, extract, util, topics
 DATA_DIR = 'data/'
 DATA_PATH = os.path.join(DATA_DIR, 'data.json')
 BOOK_PATH = os.path.join(DATA_DIR, 'books')
-QR_PATH = os.path.join(DATA_DIR, 'qrcodes')
+QR_PATH = os.path.join(DATA_DIR, 'qrcodes/books')
 OUTPUT_PATH = os.path.join(DATA_DIR, 'library.json') # load this into cybersym
 
 # load catalogued books
@@ -133,7 +133,8 @@ def process_questions():
 
 def generate_qrcodes():
     for id in BOOKS.keys():
-        img = qrcode.make(id, border=0)
+        url = 'https://library.cybernetics.social/checkout/{}'.format(id)
+        img = qrcode.make(url, border=0)
         fname = '{}.png'.format(id)
         img.save(os.path.join(QR_PATH, fname))
 
