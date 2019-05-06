@@ -1,4 +1,4 @@
 libgenapi==1.2.0
-requests==2.18.1
+requests==2.20.1
 textract==1.6.1
 qrcode==5.3
